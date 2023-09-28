@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.example</groupId>
+        <artifactId>module-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>module-yguard</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>module-a</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>module-b</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>module-c</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.yworks</groupId>
+            <artifactId>yguard</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <id>obfuscate</id>
+                        <configuration>
+                            <tasks>
+                                <property name="runtime_classpath" refid="maven.runtime.classpath"/>
+
+                                <taskdef name="yguard" classname="com.yworks.yguard.YGuardTask" classpath="${runtime_classpath}"/>
+                                <yguard>
+                                    <inoutpair in="..\module-b\target\module-b-${project.version}.jar"
+                                               out="..\module-b\target\module-b-${project.version}.jar"/>
+                                    <inoutpair in="..\module-c\target\module-c-${project.version}.jar"
+                                               out="..\module-c\target\module-c-${project.version}.jar"/>
+                                    <inoutpair in="..\module-a\target\module-a-${project.version}.jar"
+                                               out="..\module-a\target\module-a-${project.version}.jar"/>
+
+                                    <attribute name="SourceFile, LineNumberTable, LocalVariableTable">
+                                        <patternset>
+                                            <include name="org.example.**"/>
+                                        </patternset>
+                                    </attribute>
+                                    <rename logfile="${project.build.directory}/yguard.log.xml"
+                                            replaceClassNameStrings="true">
+                                        <adjust replacePathPolicy="lenient">
+                                            <include name="**.*"/>
+                                        </adjust>
+                                        <keep>
+                                            <class classes="none" methods="none" fields="none">
+                                                <patternset>
+                                                    <include name="org.example.a."/>
+                                                    <include name="org.example.b."/>
+                                                    <include name="org.example.c.util.FileUtil"/>
+                                                </patternset>
+                                            </class>
+                                            <class classes="private" methods="private" fields="private">
+                                                <patternset>
+                                                    <include name="org.example.c."/>
+                                                    <exclude name="org.example.c.util.FileUtil"/>
+                                                </patternset>
+                                            </class>
+                                        </keep>
+                                        <property name="naming-scheme" value="best"/>
+                                        <property name="language-conformity" value="illegal"/>
+                                        <property name="overload-enabled" value="true"/>
+                                    </rename>
+
+                                    <externalclasses>
+                                        <pathelement path="${runtime_classpath}"/>
+                                    </externalclasses>
+                                </yguard>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
